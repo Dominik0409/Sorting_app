@@ -1,6 +1,9 @@
 import random
 from kivy.app import App
 from kivy.uix.widget import Widget
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import Rectangle, Color
 from kivy.core.window import Window
 from kivy.clock import Clock
@@ -11,29 +14,44 @@ tile_size = Window.width / 16
 
 
 # klasa główna aplikacji
+class SortWindow(FloatLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cols = 2
+        self.sorting_widget = SortWidget()
+        self.add_widget(self.sorting_widget)
+
+        self.n_input = TextInput(text="N",multiline=False, font_size=30, size_hint=(0.1, 0.1), pos_hint={"x":0.2})
+        self.add_widget(self.n_input)
+
+        self.reset_btn = Button(text="Reset", font_size=30, size_hint=(0.1, 0.1), pos_hint={"x":0})
+        self.reset_btn.bind(on_press=lambda x:self.sorting_widget.reset(int(self.n_input.text)))
+        self.add_widget(self.reset_btn)
+
+        self.start_btn = Button(text="Start", font_size=30, size_hint=(0.1, 0.1), pos_hint={"x":0.1})
+        self.start_btn.bind(on_press=lambda x: self.sorting_widget.start_sorting())
+        self.add_widget(self.start_btn)
 
 class SortWidget(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.data = []
         self.merge_arr = []
-        self.reset_text = self.add_text("Reset", tile_size / 2, Window.width / 2 - tile_size,
-                                        tile_size, (2 * tile_size, tile_size))
         self.bubble_text = self.add_text("Bubble", tile_size / 2, Window.width / 2 - 2 * tile_size,
                                          Window.height - tile_size, (2 * tile_size, tile_size))
         self.insertion_text = self.add_text("Insertion", tile_size / 2, Window.width / 2 - 6 * tile_size,
                                             Window.height - tile_size, (2 * tile_size, tile_size))
         self.merge_text = self.add_text("Merge", tile_size / 2, Window.width / 2 + 2 * tile_size,
                                         Window.height - tile_size, (2 * tile_size, tile_size))
-        self.reset()
+        self.reset(100)
         Clock.schedule_interval(self.every_frame, 0)
 
     # funkcja resetująca zbiory
 
-    def reset(self):
+    def reset(self, n):
         self.data = []
         self.merge_i = 0
-        for i in range(100): self.data.append(random.randrange(1000))
+        for i in range(n): self.data.append(random.randrange(1000))
         self.merge_arr = [self.data]
         self.reset_screen(self.data)
         self.j = 0
@@ -50,10 +68,9 @@ class SortWidget(Widget):
         self.canvas.add(Color(1, 1, 1))
         j = 0
         for i in data:
-            self.canvas.add(Rectangle(color=(0, 1, 0), pos=(tile_size + tile_size * 0.14 * j, tile_size * 2),
-                                      size=(0.13 * tile_size, 0.005 * tile_size * i)))
+            self.canvas.add(Rectangle(color=(0, 1, 0), pos=(tile_size + (Window.width-2*tile_size)/len(data) * j, tile_size * 2),
+                                      size=((Window.width-2*tile_size)/len(data) - tile_size * 0.01, 0.005 * tile_size * i)))
             j += 1
-        self.canvas.add(self.reset_text)
         self.canvas.add(self.bubble_text)
         self.canvas.add(self.merge_text)
         self.canvas.add(self.insertion_text)
@@ -83,9 +100,9 @@ class SortWidget(Widget):
         if self.merge_text.pos[0] < touch.x < self.merge_text.pos[0] + self.merge_text.size[0] and self.merge_text.pos[
             1] < touch.y < self.merge_text.pos[1] + self.merge_text.size[1]:
             pass
-        if self.reset_text.pos[0] < touch.x < self.reset_text.pos[0] + self.reset_text.size[0] and self.reset_text.pos[
-            1] < touch.y < self.reset_text.pos[1] + self.reset_text.size[1]:
-            self.reset()
+
+    def start_sorting(self):
+        pass
 
     # sortowanie bąbelkowe
 
@@ -120,9 +137,8 @@ class SortWidget(Widget):
         pos = (x, y)
         return Rectangle(size=text.size, pos=pos, texture=text)
 
-
 # deklaracja głównej klasy
-sorting = SortWidget()
+sorting = SortWindow()
 
 
 class SortingApp(App):
